@@ -1,0 +1,7 @@
+node_modules
+
+# keeping the directory structure
+data/input/*
+data/output/*
+!data/output/countryIds/
+data/output/countryIds/*
