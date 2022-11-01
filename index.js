@@ -2,7 +2,7 @@
 
 const yargs = require('yargs'); // CLI library
 
-const coloniser = require('./coloniser.js'); // private modules
+const coloniser = require('./src/coloniser.js'); // private modules
 
 
 // CLI command
