@@ -5,3 +5,6 @@ data/input/*
 data/output/*
 !data/output/countryIds/
 data/output/countryIds/*
+
+# exclusively for development
+src/skirmish.js

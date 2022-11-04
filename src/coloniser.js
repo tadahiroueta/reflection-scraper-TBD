@@ -8,18 +8,20 @@ const tourist = require('./tourist.js');
 
 
 // constants
-const PATHS = {
+const DIRECTORIES = {
     data: "../data/",
-    input: PATHS.data + "input/",
-    output: PATHS.data + "output/",
-    genres: PATHS.input + "genres.json",
-    cookies: PATHS.input + "cookies.json",
-    countries: PATHS.input + "countries.json",
-    countryIds: PATHS.output + "countryIds/",
-    ids: PATHS.output + "ids.json",
-    titles: PATHS.output + "titles.json",
-    thumbnails: PATHS.output + "thumbnails.json",
-    availability: PATHS.output + "availability.json"
+    input: "../data/input/",
+    output: "../data/output/",
+    countryIds: "../data/output/countryIds/",
+}
+const PATHS = {
+    genres: DIRECTORIES.input + "genres.json",
+    cookies: DIRECTORIES.input + "cookies.json",
+    countries: DIRECTORIES.input + "countries.json",
+    ids: DIRECTORIES.output + "ids.json",
+    titles: DIRECTORIES.output + "titles.json",
+    thumbnails: DIRECTORIES.output + "thumbnails.json",
+    availability: DIRECTORIES.output + "availability.json"
 }
 
 
@@ -49,7 +51,7 @@ const getCleanJSON = (array) => {
  * @return {Array} missing title ids
  */
 const getMissingCountryTitles = (country) => {
-    const countryIds = require(PATHS.countryIds + country + ".json")
+    const countryIds = require(DIRECTORIES.countryIds + country + ".json")
     const titles = require(PATHS.titles)
     const missingIds = countryIds.filter((id) => !titles[id])
     return missingIds
@@ -67,7 +69,7 @@ const acquireCountryIds = async () => {
 
         const countryIds = []
         for (const genre of genres) countryIds.push(await scraper.scrapeIds(page, genre.id))
-        writeFileSync(PATHS.countryIds + country + ".json", getCleanJSON(countryIds))
+        writeFileSync(DIRECTORIES.countryIds + country + ".json", getCleanJSON(countryIds))
     }
 
     await tourist.disconnectVPN()
@@ -81,7 +83,7 @@ const acquireIds = async () => {
     updateAvailability()
 
     let ids = []
-    for (const country of countries) ids.push(require(PATHS.countryIds + country + ".json"))
+    for (const country of countries) ids.push(require(DIRECTORIES.countryIds + country + ".json"))
     writeFileSync(PATHS.ids, getCleanJSON(ids))
 }
 
@@ -92,7 +94,7 @@ const updateAvailability = () => {
     const availability = require(PATHS.availability)
 
     for (const country of countries) {
-        const countryIds = require(PATHS.countryIds + country + ".json")
+        const countryIds = require(DIRECTORIES.countryIds + country + ".json")
         for (const id of countryIds) {
             if (!availability[id]) availability[id] = []
             availability[id].push(country)
