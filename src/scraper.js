@@ -123,7 +123,12 @@ const scrapeGenres = async (page) => {
  */
 const scrapeIds = async (page, genreId) => {
     console.log(`Scraping ids from genre ${genreId}...`)
-    await page.goto(URLS.genreBase + genreId + URLS.alphabetical, WAIT_OPTIONS)
+    try {
+        await page.goto(URLS.genreBase + genreId + URLS.alphabetical, WAIT_OPTIONS)
+    }
+    catch (error) {
+        return await scrapeIds(page, genreId) // try again
+    }
     let ids
     try {
         while (true) {
