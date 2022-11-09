@@ -7,28 +7,32 @@ const scraper = require('./scraper.js');
 const tourist = require('./tourist.js');
 
 
-// constants
-const DIRECTORIES = {
-    data: "../data/",
-    input: "../data/input/",
-    output: "../data/output/",
-    countryIds: "../data/output/countryIds/",
-}
+// constant
 const PATHS = {
-    genres: DIRECTORIES.input + "genres.json",
-    cookies: DIRECTORIES.input + "cookies.json",
-    countries: DIRECTORIES.input + "countries.json",
-    ids: DIRECTORIES.output + "ids.json",
-    titles: DIRECTORIES.output + "titles.json",
-    thumbnails: DIRECTORIES.output + "thumbnails.json",
-    availability: DIRECTORIES.output + "availability.json"
+    genres: "data/input/genres.json",
+    cookies: "data/input/cookies.json",
+    countries: "data/input/countries.json",
+    ids: "data/output/ids.json",
+    titles: "data/output/titles.json",
+    thumbnails: "data/output/thumbnails.json",
+    availability: "data/output/availability.json",
+    countryIds: "data/output/countryIds/",
 }
 
 
-// data imports
-const genres = require(PATHS.genres)
-const cookies = require(PATHS.cookies)
-const countries = require(PATHS.countries)
+/** 
+ * Adjusts path to allow import 
+ * 
+ * @param {string} path
+ * @return {string} importPath
+ */
+ const getImportPath = (path) => "../" + path
+
+
+ // data imports
+const genres = require(getImportPath(PATHS.genres))
+const cookies = require(getImportPath(PATHS.cookies))
+const countries = require(getImportPath(PATHS.countries))
 
 
 /** 
@@ -51,8 +55,8 @@ const getCleanJSON = (array) => {
  * @return {Array} missing title ids
  */
 const getMissingCountryTitles = (country) => {
-    const countryIds = require(DIRECTORIES.countryIds + country + ".json")
-    const titles = require(PATHS.titles)
+    const countryIds = require(getImportPath(DIRECTORIES.countryIds + country + ".json"))
+    const titles = require(getImportPath(PATHS.titles))
     const missingIds = countryIds.filter((id) => !titles[id])
     return missingIds
 }
@@ -83,7 +87,8 @@ const acquireIds = async () => {
     updateAvailability()
 
     let ids = []
-    for (const country of countries) ids.push(require(DIRECTORIES.countryIds + country + ".json"))
+    for (const country of countries)
+        ids.push(require(getImportPath(DIRECTORIES.countryIds + country + ".json")))
     writeFileSync(PATHS.ids, getCleanJSON(ids))
 }
 
@@ -91,10 +96,10 @@ const acquireIds = async () => {
 /** Updates the list of countries each title is available in */
 const updateAvailability = () => {
     console.log("Updating availability...")
-    const availability = require(PATHS.availability)
+    const availability = require(getImportPath(PATHS.availability))
 
     for (const country of countries) {
-        const countryIds = require(DIRECTORIES.countryIds + country + ".json")
+        const countryIds = require(getImportPath(DIRECTORIES.countryIds + country + ".json"))
         for (const id of countryIds) {
             if (!availability[id]) availability[id] = []
             availability[id].push(country)
@@ -107,7 +112,7 @@ const updateAvailability = () => {
 const acquireMissingTitles = async () => {
     console.log("Acquiring missing titles...")
 
-    const titles = require(PATHS.titles)
+    const titles = require(getImportPath(PATHS.titles))
     for (const country of countries) {
         console.log(`Acquiring missing titles from ${country}...`)
         
@@ -129,7 +134,7 @@ const acquireMissingTitles = async () => {
 const acquireMissingThumbnails = async () => {
     console.log("Acquiring missing thumbnails...")
 
-    const thumbnails = require(PATHS.thumbnails)
+    const thumbnails = require(getImportPath(PATHS.thumbnails))
     for (const country of countries) {
         console.log(`Acquiring missing thumbnails from ${country}...`)
         
