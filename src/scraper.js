@@ -5,12 +5,8 @@ const puppeteer = require('puppeteer') // headless browser library
 
 // constants
 const URLS = {
-    browse: "https://www.netflix.com/browse",
     genreBase: 'https://www.netflix.com/browse/genre/',
     titleBase: 'https://www.netflix.com/title/',
-    login: "https://www.netflix.com/login",
-    films: "https://www.netflix.com/browse/genre/34399",
-    series: "https://www.netflix.com/browse/genre/83",
     alphabetical: "?so=su",
     searchBase: "https://www.netflix.com/search?q=",
 }
@@ -43,36 +39,32 @@ const DELAYS = {
     loading: 3000,
 }
 const WAIT_OPTIONS = { waitUntil: "networkidle2", timeout: 0 } // no timeout
-const isHeadless = true
+const IS_HEADLESS = false
 
 
 
 /** 
- * Launch browser and return blank page
+ * Launch browser
  * 
- * @returns {Object} puppeteer webpage object
+ * @returns {Object} browser
  */
 const launch = async () => {
-    console.log(`Launching ${isHeadless ? "headless " : ""}browser...`)
-    const browser = await puppeteer.launch({ headless: isHeadless, handleSIGINT: false }) // turn off handle signal interrupt to allow travel.js to handle it
-    const page = await browser.newPage()
-    await page.setViewport({ width: 1280, height: 800 }) // I think it helps
-    return page
+    console.log(`Launching ${IS_HEADLESS ? "headless " : ""}browser...`)
+    return await puppeteer.launch({ headless: IS_HEADLESS, handleSIGINT: false }) // turn off handle signal interrupt to allow travel.js to handle it
 }
 
 
-/** 
- * Open Netflix with cookies
+/**  
+ * Opens new tab with cookies
  * 
- * @param {Object} cookies - personal Netflix account and profile cookies
- * @returns {Object} page logged into Netflix
+ * @param {Object} browser
+ * @param {string} url - url to open
+ * @returns {Object}
  */
-const openNetflix = async (cookies) => {
-    const page = await launch()
-
-    console.log("Opening Netflix with cookies...")
+const openTab = async (browser, url) => {
+    const page = await browser.newPage()
     await page.setCookie(...cookies)
-    await page.goto(URLS.browse, WAIT_OPTIONS)
+    await page.goto(url, WAIT_OPTIONS)
     return page
 }
 
@@ -96,39 +88,15 @@ const evaluateGenres = (nameExtension) => {
 
 
 /** 
- * Scrapes genres as objects with name and id
- * 
- * @param {Object} page - puppeteer webpage object
- * @returns {Object} list of genres
- */
-const scrapeGenres = async (page) => {
-    await page.goto(URLS.films, WAIT_OPTIONS)
-    await page.click(SELECTORS.genreButton)
-    const filmGenres = await page.evaluate(evaluateGenres, SELECTORS.genres, " Films")
-
-    await page.goto(URLS.series, WAIT_OPTIONS)
-    await page.click(SELECTORS.genreButton)
-    const seriesGenres = await page.evaluate(evaluateGenres, SELECTORS.genres, " Programmes")
-
-    return filmGenres.concat(seriesGenres)
-}
-
-
-/** 
  * Scrape all ids from a genre
  * 
- * @param {Object} page - puppeteer webpage object
+ * @param {Object} browser
  * @param {string} genreId - Netflix's id for the genre
  * @returns {Object} list of ids from genre
  */
-const scrapeIds = async (page, genreId) => {
+const scrapeIds = (browser, genreId) => new Promise(async (resolve) => {
     console.log(`Scraping ids from genre ${genreId}...`)
-    try {
-        await page.goto(URLS.genreBase + genreId + URLS.alphabetical, WAIT_OPTIONS)
-    }
-    catch (error) {
-        return await scrapeIds(page, genreId) // try again
-    }
+    const page = await openTab(browser, URLS.genreBase + genreId + URLS.alphabetical)
     let ids
     try {
         while (true) {
@@ -149,21 +117,22 @@ const scrapeIds = async (page, genreId) => {
             await page.waitForTimeout(DELAYS.scroll)
     }}
     catch (error) {} // receives an error to exit the loop
-    return ids
-}
+    await page.close()
+    resolve(ids)
+})
 
 
 /** 
  * Scrapes names, descriptions, cast & etc. from title
  * 
- * @param {Object} page - puppeteer webpage object
+ * @param {Object} browser
  * @param {number} id - title id
  * @returns {Object} title - names, descriptions, cast & etc.
  */
-const scrapeTitle = async (page, id) => {
+const scrapeTitle = async (browser, id) => {
     console.log(`Scraping data from title ${id}...`)
-    await page.goto(URLS.titleBase + id, WAIT_OPTIONS)
-    return await page.evaluate(
+    const page = await openTab(browser, URLS.titleBase + id)
+    const title = await page.evaluate(
         (selectors, id) => {
             const aboutChildren = document.querySelectorAll(selectors.aboutChildren) // to make it easier to scrape degenerate tags
             
@@ -232,22 +201,25 @@ const scrapeTitle = async (page, id) => {
         },
         SELECTORS,
         id
-)}
+    )
+    await page.close()
+    return title
+}
 
 
 /**
  * Scrapes thumbnail from title
  * 
- * @param {Object} page - puppeteer webpage object
+ * @param {Object} browser
  * @param {string} name - title name
  * @returns {string} thumbnail - title thumbnail HREF
  */
-const scrapeThumbnail = async (page, name) => {
+const scrapeThumbnail = async (browser, name) => {
     console.log(`Scraping thumbnail from ${name}...`)
     const URI = encodeURIComponent(name.replace("|", " "))
-    await page.goto(URLS.thumbnailBase + URI, WAIT_OPTIONS)
+    const page = await openTab(browser, URLS.thumbnailBase + URI)
 
-    return await page.evaluate(
+    const thumbnail = await page.evaluate(
         async (linkSelector, thumbnailSelector) => {
             let link
             while (true) {
@@ -262,7 +234,10 @@ const scrapeThumbnail = async (page, name) => {
         }, 
         SELECTORS.link,
         SELECTORS.thumbnail
-)}
+        )
+    await page.close()
+    return thumbnail
+    }
 
 
 // I couldn't find a more elegant way to do this

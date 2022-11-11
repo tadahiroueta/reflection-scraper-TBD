@@ -49,13 +49,27 @@ const getCleanJSON = (array) => {
 
 
 /** 
+ * Concatenates lists of lists
+ * 
+ * @param {Array} matrix -- list of genre ids
+ * @return {Array} ids
+ */
+const concatenateMatrix = (matrix) => {
+    let ids = []
+    for (const genreIds of matrix) ids.push(genreIds) // concatenate
+    ids = Array.from(new Set(array)) // remove duplicates
+    return ids.sort((a, b) => a - b)
+}
+
+
+/** 
  * Gets ids without any other data from country ids
  * 
  * @param {string} country
  * @return {Array} missing title ids
  */
 const getMissingCountryTitles = (country) => {
-    const countryIds = require(getImportPath(DIRECTORIES.countryIds + country + ".json"))
+    const countryIds = require(getImportPath(PATHS.countryIds + country + ".json"))
     const titles = require(getImportPath(PATHS.titles))
     const missingIds = countryIds.filter((id) => !titles[id])
     return missingIds
@@ -69,11 +83,16 @@ const acquireCountryIds = async () => {
         console.log(`Acquiring ids from ${country}...`)
 
         if(!await tourist.connectVPN(country)) continue // connection failed
-        const page = await scraper.openNetflix(cookies)
+        const browser = await scraper.launch()
 
-        const countryIds = []
-        for (const genre of genres) countryIds.push(await scraper.scrapeIds(page, genre.id))
-        writeFileSync(DIRECTORIES.countryIds + country + ".json", getCleanJSON(countryIds))
+        const promises = []
+        for (const genre of genres) promises.push(scraper.getGenreIds(browser, genre.id))
+        const genreIds = await Promise.all(promises)
+        const countryIds = concatenateMatrix(genreIds)
+
+        writeFileSync(PATHS.countryIds + country + ".json", getCleanJSON(countryIds))
+
+        await browser.close()
     }
 
     await tourist.disconnectVPN()
@@ -88,7 +107,7 @@ const acquireIds = async () => {
 
     let ids = []
     for (const country of countries)
-        ids.push(require(getImportPath(DIRECTORIES.countryIds + country + ".json")))
+        ids.push(require(getImportPath(PATHS.countryIds + country + ".json")))
     writeFileSync(PATHS.ids, getCleanJSON(ids))
 }
 
@@ -99,7 +118,7 @@ const updateAvailability = () => {
     const availability = require(getImportPath(PATHS.availability))
 
     for (const country of countries) {
-        const countryIds = require(getImportPath(DIRECTORIES.countryIds + country + ".json"))
+        const countryIds = require(getImportPath(PATHS.countryIds + country + ".json"))
         for (const id of countryIds) {
             if (!availability[id]) availability[id] = []
             availability[id].push(country)
