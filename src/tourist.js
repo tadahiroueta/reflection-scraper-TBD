@@ -3,7 +3,7 @@
 const { execSync } = require('child_process'); // terminal library
 
 
-const UNALTERED_IPS = ["192.168.1.67", "10.110.3.134", "172.20.10.4"]
+const UNALTERED_IPS = require("../data/input/unalteredIps.json")
 
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))

@@ -3,6 +3,9 @@
 const puppeteer = require('puppeteer') // headless browser library
 
 
+const cookies = require("../data/input/cookies.json")
+
+
 // constants
 const URLS = {
     genreBase: 'https://www.netflix.com/browse/genre/',
@@ -39,7 +42,7 @@ const DELAYS = {
     loading: 3000,
 }
 const WAIT_OPTIONS = { waitUntil: "networkidle2", timeout: 0 } // no timeout
-const IS_HEADLESS = false
+const IS_HEADLESS = true
 
 
 
@@ -59,31 +62,16 @@ const launch = async () => {
  * 
  * @param {Object} browser
  * @param {string} url - url to open
+ * @param {number} recursiveCounter - number of times function has been called recursively
  * @returns {Object}
  */
-const openTab = async (browser, url) => {
+const openTab = async (browser, url, recursiveCounter=0) => {
+    if (recursiveCounter >= 4) throw new Error("Too many failed attempts to open tab.")
+
     const page = await browser.newPage()
     await page.setCookie(...cookies)
-    await page.goto(url, WAIT_OPTIONS)
+    try { await page.goto(url, WAIT_OPTIONS) } catch (error) { return openTab(browser, url, recursiveCounter+1) }
     return page
-}
-
-
-/**
- * Scrape all genres from an open dropdown menu
- * 
- * @param {string} nameExtension - either "Films" or "Programmes" to add to genre name
- * @returns {Object} list of genres
- */
-const evaluateGenres = (nameExtension) => {
-    console.log(`Scraping ${nameExtension.toLowerCase()} genres...`)
-    const genreSelectors = document.querySelectorAll(SELECTORS.genres)
-    const genres = []
-    for (const genreSelector of genreSelectors) genres.push({
-        name: genreSelector.innerText + nameExtension,
-        id: genreSelector.pathname.substr(genreSelector.pathname.lastIndexOf('/') + 1)
-    })
-    return genres
 }
 
 
@@ -94,12 +82,11 @@ const evaluateGenres = (nameExtension) => {
  * @param {string} genreId - Netflix's id for the genre
  * @returns {Object} list of ids from genre
  */
-const scrapeIds = (browser, genreId) => new Promise(async (resolve) => {
+const scrapeIds = async (browser, genreId) => {
     console.log(`Scraping ids from genre ${genreId}...`)
     const page = await openTab(browser, URLS.genreBase + genreId + URLS.alphabetical)
     let ids
-    try {
-        while (true) {
+    try { while (true) {
             ids = await page.evaluate(
                 (linkSelector) => {
                     const linkNodeList = document.querySelectorAll(linkSelector)
@@ -118,8 +105,8 @@ const scrapeIds = (browser, genreId) => new Promise(async (resolve) => {
     }}
     catch (error) {} // receives an error to exit the loop
     await page.close()
-    resolve(ids)
-})
+    return ids
+}
 
 
 /** 
@@ -243,8 +230,6 @@ const scrapeThumbnail = async (browser, name) => {
 // I couldn't find a more elegant way to do this
 module.exports = {
     launch,
-    openNetflix,
-    scrapeGenres,
     scrapeIds,
     scrapeTitle,
     scrapeThumbnail

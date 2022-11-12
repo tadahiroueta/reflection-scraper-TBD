@@ -10,7 +10,6 @@ const tourist = require('./tourist.js');
 // constant
 const PATHS = {
     genres: "data/input/genres.json",
-    cookies: "data/input/cookies.json",
     countries: "data/input/countries.json",
     ids: "data/output/ids.json",
     titles: "data/output/titles.json",
@@ -31,7 +30,6 @@ const PATHS = {
 
  // data imports
 const genres = require(getImportPath(PATHS.genres))
-const cookies = require(getImportPath(PATHS.cookies))
 const countries = require(getImportPath(PATHS.countries))
 
 
@@ -45,20 +43,6 @@ const getCleanJSON = (array) => {
     const cleanArray = Array.from(new Set(array)) // remove duplicates
     cleanArray.sort((a, b) => a - b) // sort in numerical order
     return JSON.stringify(cleanArray)
-}
-
-
-/** 
- * Concatenates lists of lists
- * 
- * @param {Array} matrix -- list of genre ids
- * @return {Array} ids
- */
-const concatenateMatrix = (matrix) => {
-    let ids = []
-    for (const genreIds of matrix) ids.push(genreIds) // concatenate
-    ids = Array.from(new Set(array)) // remove duplicates
-    return ids.sort((a, b) => a - b)
 }
 
 
@@ -85,11 +69,8 @@ const acquireCountryIds = async () => {
         if(!await tourist.connectVPN(country)) continue // connection failed
         const browser = await scraper.launch()
 
-        const promises = []
-        for (const genre of genres) promises.push(scraper.getGenreIds(browser, genre.id))
-        const genreIds = await Promise.all(promises)
-        const countryIds = concatenateMatrix(genreIds)
-
+        const countryIds = []
+        for (const genre of genres) countryIds.push(await scraper.scrapeIds(browser, genre.id))
         writeFileSync(PATHS.countryIds + country + ".json", getCleanJSON(countryIds))
 
         await browser.close()
@@ -139,9 +120,9 @@ const acquireMissingTitles = async () => {
         if (missingCountryIds.length === 0) continue // no missing titles
         if(!await tourist.connectVPN(country)) continue // connection failed
 
-        const page = await scraper.openNetflix(cookies)
+        const browser = await scraper.launch()
         for (const id of missingCountryIds) {
-            titles[id] = await scraper.scrapeTitle(page, id)
+            titles[id] = await scraper.scrapeTitle(browser, id)
             writeFileSync(PATHS.titles, JSON.stringify(titles)) // save after each title
     }}
     
@@ -161,9 +142,9 @@ const acquireMissingThumbnails = async () => {
         if (missingCountryIds.length === 0) continue // no missing titles
         if(!await tourist.connectVPN(country)) continue // connection failed
 
-        const page = await scraper.openNetflix(cookies)
+        const browser = await scraper.launch()
         for (const id of missingCountryIds) {
-            thumbnails[id] = await scraper.scrapeThumbnail(page, id)
+            thumbnails[id] = await scraper.scrapeThumbnail(browser, id)
             writeFileSync(PATHS.thumbnails, JSON.stringify(thumbnails)) // save after each thumbnail
     }}
     
