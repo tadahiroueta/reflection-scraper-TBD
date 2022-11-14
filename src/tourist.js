@@ -46,9 +46,12 @@ const connectVPN = async (country) => {
     disconnectVPN()
 
     console.log(`Connecting to ${country}...`)
+
+    if (country == "united-states") return true // no need for a VPN here in the States
+
     execSync(`openvpn-gui --connect ${country}`)
 
-    for (let i = 0; i < 60; i++) { // wait for one minute
+    for (let i = 0; i < 180; i++) { // wait for three minute
         await sleep(1000)
         if (!UNALTERED_IPS.includes(getIp(execSync("ipconfig")))) { // if has established connection
             await sleep(5000)

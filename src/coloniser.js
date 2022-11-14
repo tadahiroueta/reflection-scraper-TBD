@@ -70,7 +70,7 @@ const acquireCountryIds = async () => {
         const browser = await scraper.launch()
 
         const countryIds = []
-        for (const genre of genres) countryIds.push(await scraper.scrapeIds(browser, genre.id))
+        for (const genre of genres) countryIds.push(...await scraper.scrapeIds(browser, genre.id))
         writeFileSync(PATHS.countryIds + country + ".json", getCleanJSON(countryIds))
 
         await browser.close()
@@ -87,8 +87,7 @@ const acquireIds = async () => {
     updateAvailability()
 
     let ids = []
-    for (const country of countries)
-        ids.push(require(getImportPath(PATHS.countryIds + country + ".json")))
+    for (const country of countries) ids.push(...require(getImportPath(PATHS.countryIds + country + ".json")))
     writeFileSync(PATHS.ids, getCleanJSON(ids))
 }
 
