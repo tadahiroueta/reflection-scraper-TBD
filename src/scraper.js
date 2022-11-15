@@ -155,6 +155,7 @@ const scrapeTitle = async (browser, id) => {
                 "maturityDescription"
             ]
 
+            const title = { id }
             for (const property of properties) {
                 try { // some properties are not available
                     title[property] = document.querySelector(selectors[property]).innerText
