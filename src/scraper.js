@@ -170,7 +170,7 @@ const scrapeTitle = async (browser, id) => {
             catch (error) {} // I don't know many sections there are
 
             // potentially scrape average duration of episodes
-            if (title.duration.includes("m")) title.isFilm = true // if it is a film...
+            if (title.duration && title.duration.includes("m")) title.isFilm = true // if it is a film...
             else {
                 title.isFilm = false
                 const episodeDurationElements = Array.from(document.querySelectorAll(selectors.episodeDuration))
