@@ -112,12 +112,12 @@ const acquireMissingTitles = async () => {
     console.log("Acquiring missing titles...")
 
     const titles = require(getImportPath(PATHS.titles))
-    for (const country of countries) {
-        console.log(`Acquiring missing titles from ${country}...`)
-        
+    for (const country of countries) {        
         const missingCountryIds = getMissingCountryTitles(country)
         if (missingCountryIds.length === 0) continue // no missing titles
         if(!await tourist.connectVPN(country)) continue // connection failed
+
+        console.log(`Acquiring missing titles from ${country}...`)
 
         const browser = await scraper.launch()
         for (const id of missingCountryIds) {
