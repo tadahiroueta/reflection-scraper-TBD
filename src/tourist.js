@@ -24,7 +24,6 @@ const getIp = (stdout) => {
 
 /** Waits for disconnection from VPN server */
 const disconnectVPN = async () => {
-    console.log("Disconnecting VPN...")
     try {
         execSync("openvpn-gui --command disconnect_all")
     }

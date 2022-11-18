@@ -60,6 +60,20 @@ const getMissingCountryTitles = (country) => {
 }
 
 
+/**
+ * Gets ids without thumbnails from country ids
+ * 
+ * @param {string} country
+ * @return {Array} missing thumbnail ids
+ */
+const getMissingCountryThumbnails = (country) => {
+    const countryIds = require(getImportPath(PATHS.countryIds + country + ".json"))
+    const thumbnails = require(getImportPath(PATHS.thumbnails))
+    const missingIds = countryIds.filter((id) => !thumbnails[id])
+    return missingIds
+}
+
+
 /** Scrapes and downloads ids from each country */
 const acquireCountryIds = async () => {
 
@@ -134,16 +148,17 @@ const acquireMissingThumbnails = async () => {
     console.log("Acquiring missing thumbnails...")
 
     const thumbnails = require(getImportPath(PATHS.thumbnails))
-    for (const country of countries) {
-        console.log(`Acquiring missing thumbnails from ${country}...`)
-        
-        const missingCountryIds = getMissingCountryTitles(country)
+    for (const country of countries) {        
+        const missingCountryIds = getMissingCountryThumbnails(country)
         if (missingCountryIds.length === 0) continue // no missing titles
         if(!await tourist.connectVPN(country)) continue // connection failed
 
+        console.log(`Acquiring missing thumbnails from ${country}...`)
+
+        const titles = require(getImportPath(PATHS.titles))
         const browser = await scraper.launch()
         for (const id of missingCountryIds) {
-            thumbnails[id] = await scraper.scrapeThumbnail(browser, id)
+            thumbnails[id] = await scraper.scrapeThumbnail(browser, titles[id].name) // titles must be acquired before thumbnails
             writeFileSync(PATHS.thumbnails, JSON.stringify(thumbnails)) // save after each thumbnail
     }}
     

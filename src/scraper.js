@@ -204,7 +204,7 @@ const scrapeTitle = async (browser, id) => {
 const scrapeThumbnail = async (browser, name) => {
     console.log(`Scraping thumbnail from ${name}...`)
     const URI = encodeURIComponent(name.replace("|", " "))
-    const page = await openTab(browser, URLS.thumbnailBase + URI)
+    const page = await openTab(browser, URLS.searchBase + URI)
 
     const thumbnail = await page.evaluate(
         async (linkSelector, thumbnailSelector) => {
@@ -214,10 +214,7 @@ const scrapeThumbnail = async (browser, name) => {
                 if (link !== null) break
                 await new Promise((resolve) => setTimeout(resolve, 1000)) // sleep for 1 second
             }
-            const href = link.pathname
-            const code = href.substr(href.lastIndexOf('/') + 1) 
-            const source = link.querySelector(thumbnailSelector).src
-            return { code, source }
+            return link.querySelector(thumbnailSelector).src
         }, 
         SELECTORS.link,
         SELECTORS.thumbnail
