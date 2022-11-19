@@ -83,7 +83,6 @@ const openTab = async (browser, url, recursiveCounter=0) => {
  * @returns {Object} list of ids from genre
  */
 const scrapeIds = async (browser, genreId) => {
-    console.log(`Scraping ids from genre ${genreId}...`)
     const page = await openTab(browser, URLS.genreBase + genreId + URLS.alphabetical)
     let ids
     try { while (true) {
@@ -117,7 +116,6 @@ const scrapeIds = async (browser, genreId) => {
  * @returns {Object} title - names, descriptions, cast & etc.
  */
 const scrapeTitle = async (browser, id) => {
-    console.log(`Scraping data from title ${id}...`)
     const page = await openTab(browser, URLS.titleBase + id)
     const title = await page.evaluate(
         (selectors, id) => {

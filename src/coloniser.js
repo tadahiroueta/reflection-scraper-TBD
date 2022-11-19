@@ -77,9 +77,12 @@ const getMissingCountryThumbnails = (country) => {
 
 /** Scrapes and downloads ids from each country */
 const acquireCountryIds = async () => {
+    const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+    bar.start(countries.length, -1)
 
     for (const country of countries) {
-        console.log(`Acquiring ids from ${country}...`)
+        bar.increment()
+        console.log(country)
 
         if(!await tourist.connectVPN(country)) continue // connection failed
         const browser = await scraper.launch()
@@ -125,8 +128,11 @@ const updateAvailability = () => {
 /** Scrapes and downloads all missing title data from all over the world */
 const acquireMissingTitles = async () => {
     console.log("Acquiring missing titles...")
-
     const titles = require(getImportPath(PATHS.titles))
+    const idNumber = require(getImportPath(PATHS.ids)).length
+    const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+    bar.start(idNumber, Object.keys(titles).length)
+    
     for (const country of countries) {        
         const missingCountryIds = getMissingCountryTitles(country)
         if (missingCountryIds.length === 0) continue // no missing titles
@@ -138,6 +144,7 @@ const acquireMissingTitles = async () => {
         for (const id of missingCountryIds) {
             titles[id] = await scraper.scrapeTitle(browser, id)
             writeFileSync(PATHS.titles, JSON.stringify(titles)) // save after each title
+            bar.increment()
     }}
     
     await tourist.disconnectVPN()
@@ -149,6 +156,7 @@ const acquireMissingThumbnails = async () => {
     console.log("Acquiring missing thumbnails...")
     const thumbnails = require(getImportPath(PATHS.thumbnails))
     const idNumber = require(getImportPath(PATHS.ids)).length
+    const titles = require(getImportPath(PATHS.titles))
     const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
     bar.start(idNumber, Object.keys(thumbnails).length)
 
@@ -159,7 +167,6 @@ const acquireMissingThumbnails = async () => {
 
         console.log(`Acquiring missing thumbnails from ${country}...`)
 
-        const titles = require(getImportPath(PATHS.titles))
         const browser = await scraper.launch()
         for (const id of missingCountryIds) {
             thumbnails[id] = await scraper.scrapeThumbnail(browser, titles[id].name) // titles must be acquired before thumbnails
