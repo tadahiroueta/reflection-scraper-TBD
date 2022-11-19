@@ -12,6 +12,7 @@ const argv = yargs(process.argv.slice(2))
 	.example('$0 acquire ids', 'Scrapes which titles are available in each country')
 	.example('$0 acquire titles', 'Scrapes all missing title data from new ids')
 	.example('$0 acquire thumbnails', 'Scrapes all missing thumbnails from new ids')
+	.example('$0 acquire all', 'Scrapes ids, titles, and thumbnails -- a clean update')
 	.alias('a', 'acquire')
 	.demandOption(['a']);
 
@@ -29,6 +30,12 @@ const acquireOption = argv.argv.a;
 		break
 
 	case "thumbnails":
+		await coloniser.acquireMissingThumbnails()
+		break
+
+	case "all":
+		await coloniser.acquireIds()
+		await coloniser.acquireMissingTitles()
 		await coloniser.acquireMissingThumbnails()
 		break
 
