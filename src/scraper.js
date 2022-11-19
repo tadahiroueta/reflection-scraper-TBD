@@ -202,7 +202,6 @@ const scrapeTitle = async (browser, id) => {
  * @returns {string} thumbnail - title thumbnail HREF
  */
 const scrapeThumbnail = async (browser, name) => {
-    console.log(`Scraping thumbnail from ${name}...`)
     const URI = encodeURIComponent(name.replace("|", " "))
     const page = await openTab(browser, URLS.searchBase + URI)
 

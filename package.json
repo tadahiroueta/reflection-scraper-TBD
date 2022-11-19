@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/tadahiroueta/reflection-scraper#readme",
   "dependencies": {
+    "cli-progress": "^3.11.2",
     "puppeteer": "~10.4.0",
     "yargs": "^17.6.0"
   }

@@ -1,6 +1,7 @@
 /** Conducts the scraper around the world */
 
 const { writeFileSync } = require('fs'); // file explorer library
+const cliProgress = require('cli-progress'); // progress bar animation
 
 // private modules
 const scraper = require('./scraper.js');
@@ -146,8 +147,11 @@ const acquireMissingTitles = async () => {
 /** Scrapes and downloads every missing thumbnail HREF from all over the world */
 const acquireMissingThumbnails = async () => {
     console.log("Acquiring missing thumbnails...")
-
     const thumbnails = require(getImportPath(PATHS.thumbnails))
+    const idNumber = require(getImportPath(PATHS.ids)).length
+    const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+    bar.start(idNumber, Object.keys(thumbnails).length)
+
     for (const country of countries) {        
         const missingCountryIds = getMissingCountryThumbnails(country)
         if (missingCountryIds.length === 0) continue // no missing titles
@@ -160,6 +164,7 @@ const acquireMissingThumbnails = async () => {
         for (const id of missingCountryIds) {
             thumbnails[id] = await scraper.scrapeThumbnail(browser, titles[id].name) // titles must be acquired before thumbnails
             writeFileSync(PATHS.thumbnails, JSON.stringify(thumbnails)) // save after each thumbnail
+            bar.increment()
     }}
     
     await tourist.disconnectVPN()
