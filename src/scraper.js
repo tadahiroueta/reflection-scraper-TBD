@@ -42,7 +42,7 @@ const DELAYS = {
     loading: 3000,
 }
 const WAIT_OPTIONS = { waitUntil: "networkidle2", timeout: 0 } // no timeout
-const IS_HEADLESS = true
+const IS_HEADLESS = false
 
 
 
@@ -200,6 +200,8 @@ const scrapeTitle = async (browser, id) => {
  * @returns {string} thumbnail - title thumbnail HREF
  */
 const scrapeThumbnail = async (browser, name) => {
+    if (!name) return null // no longer existent
+
     const URI = encodeURIComponent(name.replace("|", " "))
     const page = await openTab(browser, URLS.searchBase + URI)
 
