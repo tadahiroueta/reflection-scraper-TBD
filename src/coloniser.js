@@ -70,7 +70,7 @@ const getMissingCountryTitles = (country) => {
 const getMissingCountryThumbnails = (country) => {
     const countryIds = require(getImportPath(PATHS.countryIds + country + ".json"))
     const thumbnails = require(getImportPath(PATHS.thumbnails))
-    const missingIds = countryIds.filter((id) => !thumbnails[id])
+    const missingIds = countryIds.filter((id) => !thumbnails.hasOwnProperty(id))
     return missingIds
 }
 

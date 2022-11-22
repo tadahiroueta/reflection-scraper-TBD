@@ -42,8 +42,7 @@ const DELAYS = {
     loading: 3000,
 }
 const WAIT_OPTIONS = { waitUntil: "networkidle2", timeout: 0 } // no timeout
-const IS_HEADLESS = false
-
+const IS_HEADLESS = true
 
 
 /** 

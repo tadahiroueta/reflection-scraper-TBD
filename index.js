@@ -30,7 +30,12 @@ const acquireOption = argv.argv.a;
 		break
 
 	case "thumbnails":
-		await coloniser.acquireMissingThumbnails()
+		while (true) { // experimental
+			try { 
+				await coloniser.acquireMissingThumbnails()
+				break
+			} catch (e) {}
+		}
 		break
 
 	case "all":

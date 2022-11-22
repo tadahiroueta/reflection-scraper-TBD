@@ -31,7 +31,7 @@ const disconnectVPN = async () => {
 
     for (let i = 0; i < 60; i++) { // wait for three minute
         sleep(1000)
-        if (UNALTERED_IPS.includes(getIp(execSync("ipconfig")))) break // if has disconnected
+        if (UNALTERED_IPS.includes(getIp(execSync("ipconfig")))) return // if has disconnected
     }
     console.log("New unknown IP address.")
 }
