@@ -18,6 +18,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const getIp = (stdout) => {
     const stdoutString = stdout.toString()
     const ipLine = stdoutString.split("\n").find((line) => line.includes("IPv4")) // get line from large response
+    if (!ipLine) throw new Error("No connection.")
     return ipLine.substring(ipLine.indexOf(":") + 1).trim() // get ip from line
 }
 

@@ -207,12 +207,12 @@ const scrapeThumbnail = async (browser, name) => {
     const thumbnail = await page.evaluate(
         async (linkSelector, thumbnailSelector) => {
             let link
-            while (true) {
+            for (let i = 0; i < 180; i++) { // try for 3 minutes
                 link = document.querySelector(linkSelector)
-                if (link !== null) break
+                if (link !== null) return link.querySelector(thumbnailSelector).src
                 await new Promise((resolve) => setTimeout(resolve, 1000)) // sleep for 1 second
             }
-            return link.querySelector(thumbnailSelector).src
+            return null // title missing
         }, 
         SELECTORS.link,
         SELECTORS.thumbnail
